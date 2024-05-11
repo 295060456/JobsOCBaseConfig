@@ -1,0 +1,6 @@
+# frozen_string_literal: true
+
+source "https://gems.ruby-china.com/"
+
+gem "cocoapods", "1.13.0"
+gem "fastlane", "2.211.0"
