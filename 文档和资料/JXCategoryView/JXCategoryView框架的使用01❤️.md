@@ -244,12 +244,12 @@ didSelectedItemAtIndex:(NSInteger)index {
 -(NSMutableArray<NSString *> *)titleMutArr{
     if (!_titleMutArr) {
         _titleMutArr = NSMutableArray.array;
-        [_titleMutArr addObject:Internationalization(@"全部游戏")];
-        [_titleMutArr addObject:Internationalization(@"真人")];
-        [_titleMutArr addObject:Internationalization(@"体育")];
-        [_titleMutArr addObject:Internationalization(@"电子")];
-        [_titleMutArr addObject:Internationalization(@"棋牌")];
-        [_titleMutArr addObject:Internationalization(@"彩票")];
+        [_titleMutArr addObject:JobsInternationalization(@"全部游戏")];
+        [_titleMutArr addObject:JobsInternationalization(@"真人")];
+        [_titleMutArr addObject:JobsInternationalization(@"体育")];
+        [_titleMutArr addObject:JobsInternationalization(@"电子")];
+        [_titleMutArr addObject:JobsInternationalization(@"棋牌")];
+        [_titleMutArr addObject:JobsInternationalization(@"彩票")];
     }return _titleMutArr;
 }
 

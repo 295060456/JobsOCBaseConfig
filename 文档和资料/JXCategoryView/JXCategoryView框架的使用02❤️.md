@@ -120,7 +120,7 @@
     if (!_ruleBtn) {
         _ruleBtn = UIButton.new;
         _ruleBtn.normalTitleColor = HEXCOLOR(0x3D4A58);
-        _ruleBtn.normalTitle = Internationalization(@"VIP規則");
+        _ruleBtn.normalTitle = JobsInternationalization(@"VIP規則");
         _ruleBtn.titleFont = notoSansRegular(12);
         BtnClickEvent(_ruleBtn, {
             [self comingToPushVC:BaiShaETProjRuleDetailVC.new requestParams:UIViewModel.new];
@@ -132,7 +132,7 @@
     if (!_titleMutArr) {
         _titleMutArr = NSMutableArray.array;
         for (int i = 0; i <= 5; i++) {
-            [_titleMutArr addObject:Internationalization([@"Lv" stringByAppendingString:[NSString stringWithFormat:@"%d",i]])];
+            [_titleMutArr addObject:JobsInternationalization([@"Lv" stringByAppendingString:[NSString stringWithFormat:@"%d",i]])];
         }
     }return _titleMutArr;
 }
