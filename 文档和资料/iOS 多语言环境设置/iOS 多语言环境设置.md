@@ -180,6 +180,21 @@ static NSString *CLUserLanguageKey = @"CLUserLanguageKey";
 ### 总结
 
 * 其实是操作语言包文件夹`*.lproj`内的`InfoPlist.strings`和`Localizable.strings`。所以一定确保这两个文件一定是包含在工程文件里（需要进入编译期）
+
 * 语言包文件夹`*.lproj`的名字，就是每个语言对应的索引；
-* `InfoPlist.strings`：App名字的多语言化
-* `Localizable.strings`：App内容的多语言化
+
+* `InfoPlist.strings`：App**名字**的多语言化；
+
+* `Localizable.strings`：App**内容**的多语言化；
+
+* <font color=red>**如果当前的key是锚定的中文，那么在`Localizable.strings(Chinese,Simplified)`文件中可以不写。因为当通过key检索不到内容时，这个时候key就是内容**</font>；
+
+* <font color=red>**如果当前的key是锚定的中文，那么需要在`Localizable.strings(English)`这个文件里以`"Key" = Value;`的形式写**</font>。例如：
+
+  ```
+  "中文" = "Chinese";
+  "英文" = "English";
+  "他加禄语" = "Tagalog";
+  ```
+
+  
