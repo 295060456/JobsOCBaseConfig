@@ -1,5 +1,7 @@
 # iOS 多语言环境设置
 
+[toc]
+
 ## 目标
 
 * App语言跟随当前手机系统语言
@@ -12,10 +14,11 @@
 * [**在iOS App内优雅的动态切换语言**](https://www.jianshu.com/p/b4288e5e6e4c)
 * [**iOS国际化 （多语言）**](https://juejin.cn/post/6966232778987798558)
 * [**Demos-LanguageSettingsDemo**](https://github.com/DarkAngel7/Demos-LanguageSettingsDemo/)
+* [**iOS - 多语言本地化**](https://devma.cn/blog/2016/05/27/ios-duo-yu-yan-ben-di-hua/)
 
 ## 特别说明
 
-* 经实践证明，如果配置多语言化，那么xcode将会刷新`Info.plist`,导致里面的注释消失。正确的做法是，对`Info.plist`进行备份，随时进行替换
+* 经实践证明，如果配置多语言化，那么xcode将会刷新`Info.plist`，导致里面的注释消失。正确的做法是，对`Info.plist`进行备份，随时进行替换
 
 ## 配置流程
 
@@ -74,11 +77,55 @@
 ### 代码中字符串的本地化（`Localizable.strings`）
 
 * 指App内的字符串在不同的语言环境下显示不同的内容；
+
 * <font color=red>**保存的文件名`Localizable.strings`为系统所需，不可更改**</font>
+
 * 像创建 `InfoPlist.strings` 一样，新建 `Localizable.strings` 文件，包括[**Localize流程**](#Localize)；
+
 * 新生成的`Localizable.strings`文件，位于`en.lproj`文件夹之下，和`InfoPlist.strings`平行；
   ![image-20240701135711515](./assets/image-20240701135711515.png)
+  
 * 对新生成的`Localizable.strings`文件，在xcode右侧选项卡进行点选，[**和`InfoPlist.strings`的操作一样**](#在xcode右侧选项卡进行点选)；
+
+* 以宏的方式进行封装。<font color=red>**最上层使用`JobsInternationalization(@"")`**</font>
+
+  ```objective-c
+  #pragma mark —— 国际化
+  static inline NSString *_Nonnull JobsInternationalization(NSString *_Nonnull text){
+      return [NSObject localStringWithKey:text];
+  }
+  /// App 国际化相关系统宏二次封装 + 设置缺省值
+  +(NSString *_Nullable)localStringWithKey:(nonnull NSString *)key{
+      return NSLocalizedString(key, nil);
+  }
+  ```
+
+* 每一次切换语言环境，都必须重塑数据源。即，重新运行一次`JobsInternationalization`相关的代码。否则效果无法展示
+
+* 语言环境切换的时候，对通知的使用
+
+  ```objective-c
+  #ifndef LanguageSwitchNotification_defined
+  #define LanguageSwitchNotification_defined
+  NSString *const LanguageSwitchNotification = @"LanguageSwitchNotification";// 语言切换
+  #endif /* LanguageSwitchNotification_defined */
+  ```
+
+  ```objective-c
+  @jobs_weakify(self)
+  JobsAddNotification(self,
+                  selectorBlocks(^id _Nullable(id _Nullable weakSelf,
+                                            id _Nullable arg){
+      NSNotification *notification = (NSNotification *)arg;
+      if([notification.object isKindOfClass:NSNumber.class]){
+          NSNumber *b = notification.object;
+          NSLog(@"SSS = %d",b.boolValue);
+      }
+      @jobs_strongify(self)
+      NSLog(@"通知传递过来的 = %@",notification.object);
+      return nil;
+  },nil, self),LanguageSwitchNotification,nil);
+  ```
 
 ### 图片本地化
 
@@ -197,4 +244,4 @@ static NSString *CLUserLanguageKey = @"CLUserLanguageKey";
   "他加禄语" = "Tagalog";
   ```
 
-  
+* 
