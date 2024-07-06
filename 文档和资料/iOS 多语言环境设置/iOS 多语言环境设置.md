@@ -20,6 +20,10 @@
 
 * 经实践证明，如果配置多语言化，那么xcode将会刷新`Info.plist`，导致里面的注释消失。正确的做法是，对`Info.plist`进行备份，随时进行替换
 
+* 工程项目的`Info.plist`文件是对整个工程的配置说明，系统固定读取，所以必须在工程项目根目录的同名文件夹下。否则项目启动会出问题
+
+  ![image-20240706113027884](./assets/image-20240706113027884.png)
+
 ## 配置流程
 
 ### xcode 中的配置
@@ -48,9 +52,8 @@
     ![image-20240701124832755](./assets/image-20240701124832755.png)
   * 新生成的`InfoPlist.strings`在<u>当前电脑上的实际路径</u>，其实是在`en.lproj`文件夹下。其中`en.lproj`和此工程项目的`Info.plist `处于同一文件层级；
     ![image-20240701132729019](./assets/image-20240701132729019.png)
-  * 但是，<u>在xcode目录索引中</u>，新生成的`InfoPlist.strings` 必须和 此工程项目的`Info.plist `处于同一文件层级。<font color=red>**否则，无法被正常检出读取**</font>
   * 当删除磁盘上的语言包`*.lproj`文件夹，项目工程xcode目录索引还有引用，也需要一并删除。在xcode右侧的文件选项卡中，移除勾选。弹出框选择`Remove`
-  * ![image-20240701141622517](./assets/image-20240701141622517.png)
+   ![image-20240701141622517](./assets/image-20240701141622517.png)
   * <font id=Localize color=blue>**Localize流程**</font>：选中新生成的`InfoPlist.strings`，在xcode的File inspection（xcode右侧文件检查器）中点击Localize，目的是选择我们需要本地化的语言
   * 点击Localize后，会弹出一个对话框，展开对话框列表，发现下拉列表所展示的语言正是我们在上面配置的需要国际化的语言，选择我们需要本地化的语言，然后点击对话框的Localize按钮
     ![image-20240701125902632](./assets/image-20240701125902632.png)
