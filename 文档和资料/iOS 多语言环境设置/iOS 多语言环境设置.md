@@ -2,12 +2,12 @@
 
 [toc]
 
-## 目标
+## 一、目标
 
 * App语言跟随当前手机系统语言
 * 用户主动切换当前App语言，即：App语言不同于手机系统语言
 
-## 参考资料
+## 二、参考资料
 
 * [**3分钟实现iOS语言本地化/国际化（图文详解）**](https://cloud.tencent.com/developer/article/1143302)
 * [**iOS App内语言切换（国际化）**](https://blog.csdn.net/shanghaibao123/article/details/107323395)
@@ -16,7 +16,7 @@
 * [**Demos-LanguageSettingsDemo**](https://github.com/DarkAngel7/Demos-LanguageSettingsDemo/)
 * [**iOS - 多语言本地化**](https://devma.cn/blog/2016/05/27/ios-duo-yu-yan-ben-di-hua/)
 
-## 特别说明
+## 三、特别说明
 
 * 经实践证明，如果配置多语言化，那么xcode将会刷新`Info.plist`，导致里面的注释消失。正确的做法是，对`Info.plist`进行备份，随时进行替换
 
@@ -24,9 +24,9 @@
 
   ![image-20240706113027884](./assets/image-20240706113027884.png)
 
-## 配置流程
+## 四、配置流程
 
-### xcode 中的配置
+### 1、xcode 中的配置
 
 * 选中 **project** → **Info** → **Localizations**，然后点击"+"，添加需要国际化/本地化的语言
 
@@ -43,7 +43,63 @@
     
   * 如果弹出如下对话框，直接点击finish
     ![image-20240701112459992](./assets/image-20240701112459992.png)
-### 应用名称本地化/国际化（`InfoPlist.strings`）
+
+### 2、语言代码
+
+* 同一种语言，因为方言文化等历史原因，会对应多个语言代码
+
+* 英语：这些代码通常由`ISO 639-1`语言代码（`en`）和 `ISO 3166-1`国家代码（如`US`、`GB`）组合而成，用于指定不同地区的英语变体
+
+  * **en**：英语（通用）
+  * **en-US**：美国英语
+  * **en-GB**：英国英语
+  * **en-AU**：澳大利亚英语
+  * **en-CA**：加拿大英语
+  * **en-NZ**：新西兰英语
+  * **en-IE**：爱尔兰英语
+  * **en-ZA**：南非英语
+  * **en-IN**：印度英语
+  * **en-SG**：新加坡英语
+  * **en-PH**：菲律宾英语
+  * **en-NG**：尼日利亚英语
+  * **en-ZW**：津巴布韦英语
+
+* 汉语：这些代码`ISO 639-1`由语言代码（`zh`）和`ISO 15924`书写系统代码（如`Hans`、`Hant`）或`ISO 3166-1`国家代码（如`CN`、`SG`）组合而成
+
+  * **zh**：中文（通用）
+  * **zh-Hans**：简体中文
+  * **zh-Hant**：繁体中文
+  * **zh-CN**：中国大陆的简体中文
+  * **zh-SG**：新加坡的简体中文
+  * **zh-TW**：台湾的繁体中文
+  * **zh-HK**：香港的繁体中文
+  * **zh-MO**：澳门的繁体中文
+  
+* 菲律宾语言：这些代码主要是`ISO 639-2`和`ISO 639-3`语言代码，用于表示菲律宾的不同语言和方言
+  
+  * **fil**：菲律宾语（Filipino），基于他加禄语（Tagalog）
+  
+  * **tl**：他加禄语（Tagalog），`ISO 639-1`代码
+  
+  * **fil-PH**：菲律宾的菲律宾语
+  
+  * **tl-PH**：菲律宾的他加禄语
+  
+  * 菲律宾方言：<font color=red>**方言的代码通常是独立使用，并不需要加前缀**</font>
+  
+    * **ceb**：宿务语（Cebuano）
+    
+    * **ilo**：伊洛卡诺语（Ilocano）
+    
+    * **bik**：比科尔语（Bikol）
+    
+    * **war**：瓦瑞语（Waray）
+    
+    * **hil**：希利盖农语（Hiligaynon）
+  
+
+### 3、应用名称本地化/国际化（`InfoPlist.strings`）
+
 * 是指同一个App的名称，在不同的语言环境下（也就是手机设备的语言设置）显示不同的名称；
   比如，微信在简体中文环境下App名称显示为**微信**，在英语环境下显示为**weChat**
   * 新建 **`Strings File`** 文件
@@ -71,13 +127,24 @@
   * 向下兼容：
 
     ```xml
+    <!-- 用于指定应用程序的显示名称是否本地化 -->
     <key>LSHasLocalizedDisplayName</key>
     <true/>
+    <!-- 应用支持的所有语言代码，这些语言代码应该与您的本地化资源文件夹相匹配 -->
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>en</string>
+        <string>zh-Hans</string>
+        <string>fil-PH</string>
+    </array>
+    <!-- 开发区域的语言代码 -->
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
     ```
-
+    
     ![image-20240701133957265](./assets/image-20240701133957265.png)
 
-### 代码中字符串的本地化（`Localizable.strings`）
+### 4、代码中字符串的本地化（`Localizable.strings`）
 
 * 指App内的字符串在不同的语言环境下显示不同的内容；
 
@@ -195,7 +262,7 @@
   },nil, self),JobsLanguageSwitchNotification,nil);
   ```
 
-### 图片本地化
+### 5、图片本地化
 
 * 方式一：和本地化代码中的字符串一样，通过`NSLocalizedString(key,comment)`来获取相应的字符串，然后根据这个字符串再获取图片。
   ```objective-c
@@ -206,7 +273,7 @@
 
 * 方式二：
 
-### 第三方支援
+### 6、第三方支援
 
 *JobsLanguageManager.h*
 
@@ -321,7 +388,7 @@ static AppLanguage _language = AppLanguageBySys;
 @end
 ```
 
-### 相关调用
+### 7、相关调用
 
 * 原理：应用启动时，首先会读取**NSUserDefaults**中的key为`JobsLanguageKey`对应的value，该value是一个String数组。也就是说，我们访问这个名为`JobsLanguageKey`的key可以返回一个string数组，该数组存储着APP支持的语言列表，数组的第一项为APP当前默认的语言。
 
@@ -361,7 +428,7 @@ static AppLanguage _language = AppLanguageBySys;
   ```
 
 
-### 总结
+## 五、总结
 
 * 其实是操作语言包文件夹`*.lproj`内的`InfoPlist.strings`和`Localizable.strings`。所以一定确保这两个文件一定是包含在工程文件里（需要进入编译期）
 
