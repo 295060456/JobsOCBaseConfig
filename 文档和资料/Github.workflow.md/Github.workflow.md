@@ -1,8 +1,14 @@
 # GitHub.workflow（工作流）的使用
 
+[toc]
+
 ## 1、介绍 **GitHub.workflow**
 
-* **GitHub Actions** 是 GitHub 提供的一项服务，它允许您在 GitHub 仓库中定义和执行自动化工作流
+* 通俗一点来讲，就是**GitHub**不仅提供存放代码的服务，还提供了一个虚拟机环境
+
+  * 运行**GitHub.workflow**需要在这台远程的**GitHub**虚拟机上安装必要的环境
+
+* **GitHub Actions** 是 **GitHub** 提供的一项服务，它允许您在 **GitHub** 仓库中定义和执行自动化工作流
 
 * 这些工作流由事件触发，可以执行各种任务，例如持续集成（CI）、持续交付（CD）、测试、构建、部署等
 
@@ -30,6 +36,34 @@
 
 ## 2、工作方式
 
+* 本地环境配置
+
+  * ```shell
+    brew install npm
+    brew install chromium
+    ```
+  
+  * 全局使用
+  
+    ```shell
+    npm install -g @mermaid-js/mermaid-cli
+    ```
+  
+    在特定的项目中使用。定位项目根目录
+  
+    ```shell
+    npm install @mermaid-js/mermaid-cli
+    ```
+  
+  * ```shell
+    ➜  JobsOCBaseConfigDemo git:(main) ✗  npx mmdc -i README.md -o diagram.png
+    Found 2 mermaid charts in Markdown input
+    [@zenuml/core] Store is a function and is not initiated in 1 second.
+    [@zenuml/core] Store is a function and is not initiated in 1 second.
+     ✅ ./diagram-1.png
+     ✅ ./diagram-2.png
+    ```
+  
 * 在项目根目录建立**`.github`**→**`workflows`**→**`generate_diagrams.yml`**
 
   * `generate_diagrams.yml`
@@ -133,6 +167,8 @@
   * `Name`中填写`ACTIONS_PAT`;
   * `Secret`中填写秘钥
   
+  ## 手动启动
   
-  
-  
+  ![image-20240707005534108](./assets/image-20240707005534108.png)
+
+![image-20240707005554875](./assets/image-20240707005554875.png)
