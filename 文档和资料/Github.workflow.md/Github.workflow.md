@@ -1,5 +1,69 @@
-# Github.workflow（工作流）的使用
+# GitHub.workflow（工作流）的使用
 
+[toc]
+
+## 1、介绍 **GitHub.workflow**
+
+* 通俗一点来讲，就是**GitHub**不仅提供存放代码的服务，还提供了一个虚拟机环境
+
+  * 运行**GitHub.workflow**需要在这台远程的**GitHub**虚拟机上安装必要的环境
+
+* **GitHub Actions** 是 **GitHub** 提供的一项服务，它允许您在 **GitHub** 仓库中定义和执行自动化工作流
+
+* 这些工作流由事件触发，可以执行各种任务，例如持续集成（CI）、持续交付（CD）、测试、构建、部署等
+
+* 工作流文件位于仓库的 `.github/workflows` 目录下
+
+* 可以在本地测试**工作流**是否正常工作
+
+  ```shell
+  brew install act
+  ```
+
+* 名词解释：
+
+  * **工作流 (Workflow)**：工作流是由 **YAML** 文件定义的一系列自动化任务
+  * **事件 (Event)**：事件是触发工作流的条件，例如代码推送（push）、创建 Pull Request、计划任务等
+  * **作业 (Job)**：作业是工作流中可并行运行的一组步骤，每个作业在一个新的虚拟机中运行
+  * **步骤 (Step)**：步骤是作业中的单个任务，可以执行脚本或使用 GitHub Actions 社区提供的预定义动作
+  * **运行器 (Runner)**：运行器是执行作业的服务器。GitHub 提供托管的运行器，用户也可以自托管运行器
+
+* 参考资源
+
+  * [**GitHub Actions 官方文档**](https://docs.github.com/en/actions)
+  * [**GitHub Actions 入门教程**](https://docs.github.com/en/actions/learn-github-actions)
+  * [**GitHub Actions 市场**](https://github.com/marketplace?type=actions)
+
+## 2、工作方式
+
+* 本地环境配置
+
+  * ```shell
+    brew install npm
+    brew install chromium
+    ```
+  
+  * 全局使用
+  
+    ```shell
+    npm install -g @mermaid-js/mermaid-cli
+    ```
+  
+    在特定的项目中使用。定位项目根目录
+  
+    ```shell
+    npm install @mermaid-js/mermaid-cli
+    ```
+  
+  * ```shell
+    ➜  JobsOCBaseConfigDemo git:(main) ✗  npx mmdc -i README.md -o diagram.png
+    Found 2 mermaid charts in Markdown input
+    [@zenuml/core] Store is a function and is not initiated in 1 second.
+    [@zenuml/core] Store is a function and is not initiated in 1 second.
+     ✅ ./diagram-1.png
+     ✅ ./diagram-2.png
+    ```
+  
 * 在项目根目录建立**`.github`**→**`workflows`**→**`generate_diagrams.yml`**
 
   * `generate_diagrams.yml`
@@ -81,8 +145,6 @@
      79dd87d..148dab7  main -> main
   ```
   
-* 
-  
 * 获得与本机相关联的私钥
   
   * `https://github.com/settings/profile`→`https://github.com/settings/apps`→`https://github.com/settings/tokens`
@@ -99,12 +161,14 @@
 
   ![image-20240704142744377](./assets/image-20240704142744377.png)
 
-* 填写`Actions secrets`。Git Actions机器人需要有操作权限
+* 填写`Actions secrets`。**Git Actions**机器人需要有操作权限
   ![image-20240704143425822](./assets/image-20240704143425822.png)
   
   * `Name`中填写`ACTIONS_PAT`;
   * `Secret`中填写秘钥
   
+  ## 手动启动
   
-  
-  
+  ![image-20240707005534108](./assets/image-20240707005534108.png)
+
+![image-20240707005554875](./assets/image-20240707005554875.png)
