@@ -66,7 +66,7 @@
   
 * 在项目根目录建立**`.github`**→**`workflows`**→**`generate_diagrams.yml`**
 
-  * `generate_diagrams.yml`
+  * `generate_diagrams.yml`。<font color=blue>**对于目前这个工作流脚本，需要保证在对应的`*.md`文件里面有对应的`mermaid`标签，否则运行会失败**</font>
 
     ```yml
     name: Generate Mermaid Diagrams
@@ -74,58 +74,54 @@
     on:
       push:
         branches:
-          - main  # 或者您希望的其他分支
-      workflow_dispatch:  # 允许手动触发
+          - main
+      pull_request:
+        branches:
+          - main
+      workflow_dispatch: # 允许手动触发
     
     jobs:
       build:
         runs-on: ubuntu-latest
+        permissions:
+          contents: write # 对当前github仓库具有写的权限
     
         steps:
         - name: Checkout repository
           uses: actions/checkout@v2
+          with:
+            token: ${{ secrets.PAT }} # 计划稍后使用自己的 PAT `git push` 对不同的存储库执行操作
     
         - name: Setup Node.js
           uses: actions/setup-node@v3
           with:
             node-version: '20'  # 使用最新版本的 Node.js
-    
-        - name: Install mermaid-cli
-          run: npm install -g @mermaid-js/mermaid-cli
+            
+        - name: Install dependencies
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y chromium-browser
+            npm install -g @mermaid-js/mermaid-cli
     
         - name: Generate Diagrams
           run: |
-            echo "Current directory:"
-            pwd
-            echo "List files in current directory:"
-            ls -al
-            mkdir -p diagrams
-            echo "List files in diagrams directory before generating diagram:"
-            ls -al diagrams
-            npx mmdc -i README.md -o diagrams/diagram.png -b transparent
-            echo "List files in diagrams directory after generating diagram:"
-            ls -al diagrams
-            if ls diagrams/diagram-*.png 1> /dev/null 2>&1; then
-              echo "Diagrams generated successfully"
-            else
-              echo "Diagram generation failed"
-              exit 1
-            fi
+            npx mmdc -i README.md -o diagram.png
+            ls -la # 列出当前目录中的文件
     
-        - name: Commit and push diagram
+        - name: Show current directory structure
+          run: ls -R
+            
+        - name: Commit and push diagrams
           if: success()
-          env:
-            ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
           run: |
             git config --global user.name 'github-actions'
             git config --global user.email 'github-actions@github.com'
-            git add diagrams/diagram-*.png
-            git commit -m 'Generate Mermaid diagram'
-            git push https://${{ secrets.ACTIONS_PAT }}@github.com/${{ github.repository }}.git HEAD:main
-    
+            git add diagram-*.png
+            git commit -m 'Auto-Generate Mermaid diagrams'
+            git push https://${{ github.actor }}:${{ secrets.PAT }}@github.com/${{ github.repository }}.git HEAD:main
     ```
-
-* 只会在Github云上执行，而不是本地机器执行。最后将执行结果`git pull`下来
+  
+* 只会在**Github**云上执行，而不是本地机器执行。最后将执行结果`git pull`下来
 
   ```shell
   ➜  JobsOCBaseConfigDemo git:(main) git add .github/workflows/generate_diagrams.yml
