@@ -452,7 +452,3 @@ typedef NS_ENUM(NSInteger, DeviceOrientation) {
 * [**如果锚定`view.traitCollection.verticalSizeClass`**](#锚定`view.traitCollection.verticalSizeClass`)，则需要配置 `- (UIInterfaceOrientationMask)application:(UIApplication *)application
   supportedInterfaceOrientationsForWindow:(UIWindow *)window`，方可正常检测横竖屏
 
-  
-
-
-
