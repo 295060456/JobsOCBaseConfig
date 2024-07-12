@@ -1,52 +1,6 @@
 # OC相关经验
 
-- [-OC相关经验](#-oc相关经验)
-  - [***OC/C.Block***](#occblock)
-  - [锁](#锁)
-  - [OC里面有没有类似于Java里面的`linkedhashset`的东西](#oc里面有没有类似于java里面的linkedhashset的东西)
-  - [可能会存在属性没有对应的 `getter` 和 `setter` 方法的情况](#可能会存在属性没有对应的-getter-和-setter-方法的情况)
-  - [***OC.AssociatedObjects（关联对象）***](#ocassociatedobjects关联对象)
-  - [KVC 和 KVO](#kvc-和-kvo)
-    - [KVC（***K***ey-***V***alue ***C***oding）：**键值**存储](#kvckey-value-coding键值存储)
-    - [KVO（***K***ey-***V***alue ***O***bserving）：**属性**观察](#kvokey-value-observing属性观察)
-    - [KVO相应的观察方法](#kvo相应的观察方法)
-    - [KVC 和 KVO的相互调用问题](#kvc-和-kvo的相互调用问题)
-      - [***在使用KVC的时候会使用的KVO吗？***](#在使用kvc的时候会使用的kvo吗)
-      - [***在使用KVO的时候会使用的KVC吗？***](#在使用kvo的时候会使用的kvc吗)
-  - [MVP](#mvp)
-  - [MVP vs MVVM](#mvp-vs-mvvm)
-  - [字符是由ASCII码一一对应的。那么在内存里面，是如何与整型（Int）进行区分的？](#字符是由ascii码一一对应的那么在内存里面是如何与整型int进行区分的)
-  - [ASCII码在内存里是用数字表示，但如果一个纯数字在内存怎么表示呢？会不会和ASCII码冲突？](#ascii码在内存里是用数字表示但如果一个纯数字在内存怎么表示呢会不会和ascii码冲突)
-  - [结构体](#结构体)
-  - [雪花算法（Snowflake）](#雪花算法snowflake)
-  - [计算机内存是怎么去表示浮点数的](#计算机内存是怎么去表示浮点数的)
-  - [IPv6](#ipv6)
-  - [一个IP能有多少个端口](#一个ip能有多少个端口)
-  - [int \*p = \&a](#int-p--a)
-  - [哈希表（Hash Table）的本质](#哈希表hash-table的本质)
-  - [*OC*.非正式协议](#oc非正式协议)
-  - [***OC.依赖注入***](#oc依赖注入)
-  - [函数（方法）签名](#函数方法签名)
-  - [方法的重载：系统将会识别为2个不同的方法](#方法的重载系统将会识别为2个不同的方法)
-  - [***OC.定时器***](#oc定时器)
-    - [GCD](#gcd)
-    - [NSTimer](#nstimer)
-    - [CADisplayLink](#cadisplaylink)
-  - [***OC.多线程***](#oc多线程)
-    - [pthread](#pthread)
-    - [NSThread](#nsthread)
-    - [GCD](#gcd-1)
-    - [NSOperation](#nsoperation)
-  - [***OC.Runtime.消息转发机制***](#ocruntime消息转发机制)
-  - [dylib](#dylib)
-  - [`+load` 和 `+initialize` 的区别](#load-和-initialize-的区别)
-  - [\[**objc\_msgSend 方法调用流程**\](# https://www.jianshu.com/p/a5d818d90a6e)](#objc_msgsend-方法调用流程-httpswwwjianshucompa5d818d90a6e)
-  - [***OC.database***](#ocdatabase)
-    - [***OC.SQLite***](#ocsqlite)
-    - [***OC.FMDB***](#ocfmdb)
-    - [***OC.Realm（强烈推荐）***](#ocrealm强烈推荐)
-  - [在OC里面NSString用`copy`修饰 还是`Strong`修饰？](#在oc里面nsstring用copy修饰-还是strong修饰)
-  - [其他](#其他)
+[toc]
 
 ## <font color="red">***OC/C.Block***</font>
 
@@ -93,6 +47,8 @@
   * 在内存中，`self` 会被作为一个弱引用存储在[堆](# 堆(Heap))上；
   * 具体来说，编译器会生成一个指向 `self` 的弱引用；**这个弱引用不会增加 `self` 的引用计数，也不会阻止 `self` 被释放**。如果 `self` 被释放后，这个弱引用会被自动置为 nil，以避免访问已释放的对象而导致的崩溃；
   * 实际上，当 *Block* 内部访问 `self` 时，会首先检查这个弱引用是否有效（即是否为 nil）。如果有效，则可以继续访问 `self`；如果无效，则说明 `self` 已经被释放，这时候访问 `self` 将不会引发野指针访问错误，而是返回 nil 或者执行一些安全的默认行为，这取决于具体的上下文和实现。
+  
+* <font color=red>**不可以和属性合用**</font>
 
 ## 锁
 
@@ -1070,7 +1026,7 @@ Objective-C 中的消息转发机制是一种在***运行时动态处理未知�
     * ⑥ `callInitialize`
     * ⑦ `objc_msgSend(cls, SEL_initialize)`：给 cls 对象发送 initialize 消息
 
-## [**objc_msgSend 方法调用流程**](# https://www.jianshu.com/p/a5d818d90a6e)
+## [**objc_msgSend 方法调用流程**](https://www.jianshu.com/p/a5d818d90a6e)
 
 * 在`OC`中调用一个方法时，编译器会根据情况调用以下函数中的一个进行消息传递：`objc_msgSend`、`objc_msgSend_stret`、`objc_msgSendSuper`、`objc_msgSendSuper_stret`
   * 当方法调用者为`super`时会调用`objc_msgSendSuper`；
