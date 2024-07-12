@@ -270,7 +270,7 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
   NSLog(@"");
   ```
 
-### 1、<font id=锚定`UIDevice.currentDevice.orientation`>锚定`UIDevice.currentDevice.orientation`</font>
+### 1、<font id=锚定`UIDevice.currentDevice.orientation`>**锚定`UIDevice.currentDevice.orientation`**</font>
 
 * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
 
@@ -308,7 +308,7 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |  <font size=2>UIDeviceOrientationUnknown</font>   |
     | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |  <font size=2>UIDeviceOrientationUnknown</font>   |
 
-### 2、<font id=锚定场景方向`UIInterfaceOrientation`>锚定场景方向`UIInterfaceOrientation`</font>
+### 2、<font id=锚定场景方向`UIInterfaceOrientation`>**锚定场景方向`UIInterfaceOrientation`**</font>
 
   ```objective-c
   -(UIInterfaceOrientation)getInterfaceOrientation{
@@ -362,7 +362,7 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
     | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> |  <font size=2>UIInterfaceOrientationLandscapeRight❌</font>   |
 
-### 3、<font id=锚定`view.traitCollection.verticalSizeClass`>锚定`view.traitCollection.verticalSizeClass`</font>
+### 3、<font id=锚定`view.traitCollection.verticalSizeClass`>**锚定`view.traitCollection.verticalSizeClass`**</font>
 
 ```objective-c
 -(DeviceOrientation)getDeviceOrientation{
