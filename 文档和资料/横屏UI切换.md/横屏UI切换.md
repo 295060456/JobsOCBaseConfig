@@ -227,10 +227,36 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
 
 * <font color=red size=10>**结论**</font>
 
-  * 都需要[**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
-  * 如果值有效，那么在`-(void)viewDidAppear:(BOOL)animated`之前的生命周期，均不可用（错误值或者未采到值）<font color=red size=2>**关注最终调整好的终值，不要纠缠于过程值**</font>
-  * 如果要在非`UITabBarController`及其子类、以及非挂载的子控制器中 有效，那么采用`-(DeviceOrientation)getDeviceOrientation`
-  * 如果要在`UITabBarController`及其子类、以及挂载的子控制器中 有效，那么采用`-(UIInterfaceOrientation)getInterfaceOrientation` 或者`UIDevice.currentDevice.orientation`
+  * 不要在`UITabBarController *` 和 挂载到的其子控制器上去做屏幕方向检测。因为涉及到应用程序初始化的中间过程，取值会是系统调整过程的中间值，不准确
+
+  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)是强制性的，所以<font color=red>**优先级最高**</font>
+
+  * 如果没有[**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，在实操过程中考虑选用`UIDevice.currentDevice.orientation`
+
+  * `UIDevice.currentDevice.orientation`不是总是有效。在应用启动时，设备方向信息有时可能还没有完全初始化，这可能导致得到 `UIDeviceOrientationUnknown`
+
+  * **如果一定要在`UITabBarController *` 和 挂载到的其子控制器上去做屏幕方向检测，那么使用枚举，标的物为人工强制性的对其赋值**
+
+    全局的
+
+    ```objective-c
+    /// 一进入App就横屏
+    - (UIInterfaceOrientationMask)application:(UIApplication *)application
+      supportedInterfaceOrientationsForWindow:(UIWindow *)window {
+        JobsAppTool.currentInterfaceOrientation = UIInterfaceOrientationLandscapeLeft | UIInterfaceOrientationLandscapeRight;
+        JobsAppTool.currentDeviceOrientation = UIDeviceOrientationLandscapeLeft | UIDeviceOrientationLandscapeRight;
+        JobsAppTool.currentInterfaceOrientationMask = UIInterfaceOrientationMaskLandscape;
+        return UIInterfaceOrientationMaskLandscape;
+    }
+    ```
+
+  * **其实系统有<u>3个维度</u>来综合评估当前是否为横屏**
+
+    * 设备真实的方向（定义手机横卧为横屏）
+    * [**具体的某个控制器门内是否做了横屏适配**](#横屏适配)
+    * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
+
+  * 系统通知`UIDeviceOrientationDidChangeNotification`也是需要服从界面UI的生命周期，否则取值不成功
 
 *  <font id=横屏适配>**以下测评数据，各个相关的控制器均做了横屏适配**</font>
 
@@ -270,31 +296,31 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
   NSLog(@"");
   ```
 
-### 1、<font id=锚定`UIDevice.currentDevice.orientation`>**锚定`UIDevice.currentDevice.orientation`**</font>
+### 1、<font id=锚定`UIDevice.currentDevice.orientation`>**锚定`UIDevice.currentDevice.orientation`**</font>（需要真机配合）
 
 * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
 
   * 当前设备横屏
 
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController<br/>`及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |    <font size=2>UITabBarController *</font>    |   <font size=2>普通UIViewController *</font>   |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :--------------------------------------------: | :--------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
 
-  * 当前设备竖屏
+  * **当前设备竖屏**
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController<br/>`及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |    <font size=2>UITabBarController *</font>    |   <font size=2>普通UIViewController *</font>   |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :--------------------------------------------: | :--------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
 
 * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
   
-  * 当前设备横屏
+  * **当前设备横屏**
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController<br/>`及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   |     <font size=2>挂载到`UITabBarController`的子vc</font>     |           <font size=2>UITabBarController *</font>           |          <font size=2>普通UIViewController *</font>          |
     | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
     |         <font size=2>- (void)**viewDidLoad**</font>          | <font color=red size=2>**UIDeviceOrientationLandscapeRight**</font> |        <font size=2>UIDeviceOrientationUnknown</font>        | <font color=red size=2>**UIDeviceOrientationLandscapeRight**</font> |
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> | <font color=red size=2>**UIDeviceOrientationLandscapeRight**</font> |        <font size=2>UIDeviceOrientationUnknown</font>        | <font color=red size=2>**UIDeviceOrientationLandscapeRight**</font> |
@@ -302,11 +328,11 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
 
   * 当前设备竖屏
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | 当前控制器为普通的`UIViewController`<br/>及其子类 |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :-----------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |  <font size=2>UIDeviceOrientationUnknown</font>   |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |  <font size=2>UIDeviceOrientationUnknown</font>   |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>UIDeviceOrientationUnknown</font>        |        <font size=2>UIDeviceOrientationUnknown</font>        |  <font size=2>UIDeviceOrientationUnknown</font>   |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |    <font size=2>UITabBarController *</font>    |   <font size=2>普通UIViewController *</font>   |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :--------------------------------------------: | :--------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |    <font size=2>UIDeviceOrientationUnknown</font>    | <font size=2>UIDeviceOrientationUnknown</font> | <font size=2>UIDeviceOrientationUnknown</font> |
 
 ### 2、<font id=锚定场景方向`UIInterfaceOrientation`>**锚定场景方向`UIInterfaceOrientation`**</font>
 
@@ -330,25 +356,25 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
 
   * 当前设备横屏
 
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |      <font size=2>UITabBarController *</font>       |     <font size=2>普通UIViewController *</font>      |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :-------------------------------------------------: | :-------------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |  <font size=2>UIInterfaceOrientationUnknown</font>   |  <font size=2>UIInterfaceOrientationUnknown</font>  |  <font size=2>UIInterfaceOrientationUnknown</font>  |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |  <font size=2>UIInterfaceOrientationUnknown</font>   |  <font size=2>UIInterfaceOrientationUnknown</font>  |  <font size=2>UIInterfaceOrientationUnknown</font>  |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  | <font size=2>UIInterfaceOrientationPortrait❌</font>  | <font size=2>UIInterfaceOrientationPortrait❌</font> | <font size=2>UIInterfaceOrientationPortrait❌</font> |
+
+  * **当前设备竖屏**
+
+    |     <font size=2>`UIViewController`的生命周期方法</font>     |     <font size=2>挂载到`UITabBarController`的子vc</font>     |           <font size=2>UITabBarController *</font>           |          <font size=2>普通UIViewController *</font>          |
     | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
     |         <font size=2>- (void)**viewDidLoad**</font>          |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |     <font size=2>UIInterfaceOrientationPortrait❌</font>      |     <font size=2>UIInterfaceOrientationPortrait❌</font>      |     <font size=2>UIInterfaceOrientationPortrait❌</font>      |
-
-  * 当前设备竖屏
-
-    |     <font size=2>`UIViewController`的生命周期方法</font>     | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController<br/>`及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |      <font size=2>UIInterfaceOrientationPortrait</font>      |      <font size=2>UIInterfaceOrientationPortrait</font>      |      <font size=2>UIInterfaceOrientationPortrait</font>      |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> |
 
 * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
   
-  * 当前设备横屏
+  * **当前设备横屏**
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   |     <font size=2>挂载到`UITabBarController`的子vc</font>     |           <font size=2>UITabBarController *</font>           |          <font size=2>普通UIViewController *</font>          |
     | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
     |         <font size=2>- (void)**viewDidLoad**</font>          |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
@@ -356,74 +382,76 @@ pod 'HXRotationTool' # https://github.com/TheLittleBoy/HXRotationTool
 
   * 当前设备竖屏
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |      <font size=2>UIInterfaceOrientationUnknown</font>       |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> | <font color=red size=2>**UIInterfaceOrientationPortrait**</font> |  <font size=2>UIInterfaceOrientationLandscapeRight❌</font>   |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |      <font size=2>UITabBarController *</font>       |          <font size=2>普通UIViewController *</font>          |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :-------------------------------------------------: | :----------------------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |  <font size=2>UIInterfaceOrientationUnknown</font>   |  <font size=2>UIInterfaceOrientationUnknown</font>  |      <font size=2>UIInterfaceOrientationUnknown</font>       |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |  <font size=2>UIInterfaceOrientationUnknown</font>   |  <font size=2>UIInterfaceOrientationUnknown</font>  |      <font size=2>UIInterfaceOrientationUnknown</font>       |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  | <font size=2>UIInterfaceOrientationPortrait❌</font>  | <font size=2>UIInterfaceOrientationPortrait❌</font> | <font color=red size=2>**UIInterfaceOrientationLandscapeRight**</font> |
 
 ### 3、<font id=锚定`view.traitCollection.verticalSizeClass`>**锚定`view.traitCollection.verticalSizeClass`**</font>
 
-```objective-c
--(DeviceOrientation)getDeviceOrientation{
-    UIView *view = self.getView;
-    if(view){
-        if(view.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact){
-            return DeviceOrientationLandscape;
-        }else{
-            return DeviceOrientationPortrait;
-        }
-    }else return DeviceOrientationUnknown;
-}
-```
+* **`-(DeviceOrientation)getDeviceOrientation`**
 
-```objective-c
--(UIView *_Nullable)getView{
-    UIView *view = nil;
-    if ([self isKindOfClass:UIView.class]) {
-        view = (UIView *)self;
-    }else if ([self isKindOfClass:UIViewController.class]){
-        UIViewController *vc = (UIViewController *)self;
-        view = vc.view;
-    }return view;
-}
-```
+  * ```objective-c
+    -(DeviceOrientation)getDeviceOrientation{
+        UIView *view = self.getView;
+        if(view){
+            if(view.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact){
+                return DeviceOrientationLandscape;
+            }else{
+                return DeviceOrientationPortrait;
+            }
+        }else return DeviceOrientationUnknown;
+    }
+    ```
 
-```objective-c
-/// 屏幕方向
-#ifndef DeviceOrientation_typedef
-#define DeviceOrientation_typedef
-typedef NS_ENUM(NSInteger, DeviceOrientation) {
-    DeviceOrientationUnknown, /// 未知方向
-    DeviceOrientationPortrait,/// 竖屏
-    DeviceOrientationLandscape /// 横屏
-};
-#endif /* DeviceOrientation_typedef */
-```
+  * ```objective-c
+    -(UIView *_Nullable)getView{
+        UIView *view = nil;
+        if ([self isKindOfClass:UIView.class]) {
+            view = (UIView *)self;
+        }else if ([self isKindOfClass:UIViewController.class]){
+            UIViewController *vc = (UIViewController *)self;
+            view = vc.view;
+        }return view;
+    }
+    ```
+
+  * ```objective-c
+    /// 屏幕方向
+    #ifndef DeviceOrientation_typedef
+    #define DeviceOrientation_typedef
+    typedef NS_ENUM(NSInteger, DeviceOrientation) {
+        DeviceOrientationUnknown, /// 未知方向
+        DeviceOrientationPortrait,/// 竖屏
+        DeviceOrientationLandscape /// 横屏
+    };
+    #endif /* DeviceOrientation_typedef */
+    ```
 
 * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
 
   * 当前设备横屏
 
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |    <font size=2>UITabBarController *</font>    |   <font size=2>普通UIViewController *</font>   |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :--------------------------------------------: | :--------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |    <font size=2>DeviceOrientationPortrait❌</font>    | <font size=2>DeviceOrientationPortrait❌</font> | <font size=2>DeviceOrientationPortrait❌</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |    <font size=2>DeviceOrientationPortrait❌</font>    | <font size=2>DeviceOrientationPortrait❌</font> | <font size=2>DeviceOrientationPortrait❌</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |    <font size=2>DeviceOrientationPortrait❌</font>    | <font size=2>DeviceOrientationPortrait❌</font> | <font size=2>DeviceOrientationPortrait❌</font> |
 
-  * 当前设备竖屏
+  * **当前设备竖屏**
 
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |        <font size=2>DeviceOrientationPortrait</font>         |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>挂载到`UITabBarController`的子vc</font> |   <font size=2>UITabBarController *</font>    |  <font size=2>普通UIViewController *</font>   |
+    | :----------------------------------------------------------: | :--------------------------------------------------: | :-------------------------------------------: | :-------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |    <font size=2>DeviceOrientationPortrait</font>     | <font size=2>DeviceOrientationPortrait</font> | <font size=2>DeviceOrientationPortrait</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |    <font size=2>DeviceOrientationPortrait</font>     | <font size=2>DeviceOrientationPortrait</font> | <font size=2>DeviceOrientationPortrait</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |    <font size=2>DeviceOrientationPortrait</font>     | <font size=2>DeviceOrientationPortrait</font> | <font size=2>DeviceOrientationPortrait</font> |
 
 * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)
   
-  * 当前设备横屏
+  * **当前设备横屏**
   
-    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br/>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
+    |  <font size=2>`UIViewController`的<br/>生命周期方法</font>   | <font size=2><font size=2>挂载到`UITabBarController`的子vc</font></font> |           <font size=2>UITabBarController *</font>           |          <font size=2>普通UIViewController *</font>          |
     | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
     |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        | <font color=red size=2>**DeviceOrientationLandscape**</font> |
     | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        | <font color=red size=2>**DeviceOrientationLandscape**</font> |
@@ -431,33 +459,26 @@ typedef NS_ENUM(NSInteger, DeviceOrientation) {
 
   * 当前设备竖屏
   
-    |  <font size=2>`UIViewController的`<br/>生命周期方法</font>   | <font size=2>当前控制器为挂载到`UITabBarController`<br>及其子类上的控制器</font> | <font size=2>当前控制器为`UITabBarController`<br/>及其子类</font> | <font size=2>当前控制器为普通的`UIViewController`<br/>及其子类</font> |
-    | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        | <font color=red size=2>**DeviceOrientationLandscape**</font> |
-    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        | <font color=red size=2>**DeviceOrientationLandscape**</font> |
-    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>DeviceOrientationPortrait❌</font>        |        <font size=2>DeviceOrientationPortrait❌</font>        | <font color=red size=2>**DeviceOrientationLandscape**</font> |
+    |  <font size=2>`UIViewController的`<br/>生命周期方法</font>   | <font size=2><font size=2>挂载到`UITabBarController`的子vc</font></font> |    <font size=2>UITabBarController *</font>    |          <font size=2>普通UIViewController *</font>          |
+    | :----------------------------------------------------------: | :----------------------------------------------------------: | :--------------------------------------------: | :----------------------------------------------------------: |
+    |         <font size=2>- (void)**viewDidLoad**</font>          |        <font size=2>DeviceOrientationPortrait❌</font>        | <font size=2>DeviceOrientationPortrait❌</font> | <font color=red size=2>**DeviceOrientationLandscape**</font> |
+    | <font size=2>-(void)**viewWillAppear**:(BOOL)animated</font> |        <font size=2>DeviceOrientationPortrait❌</font>        | <font size=2>DeviceOrientationPortrait❌</font> | <font color=red size=2>**DeviceOrientationLandscape**</font> |
+    | <font size=2>-(void)**viewDidAppear**:(BOOL)animated</font>  |        <font size=2>DeviceOrientationPortrait❌</font>        | <font size=2>DeviceOrientationPortrait❌</font> | <font color=red size=2>**DeviceOrientationLandscape**</font> |
 
 ### 七、 测评结论
 
-* 系统通知`UIDeviceOrientationDidChangeNotification`也是需要服从界面UI的生命周期，否则取值不成功
-* `UIDevice.currentDevice.orientation`不是总是有效。在应用启动时，设备方向信息有时可能还没有完全初始化，这可能导致得到 `UIDeviceOrientationUnknown`
-* **其实系统有<u>3个维度</u>来综合评估当前是否为横屏**
-  * 设备真实的方向（定义手机横卧为横屏）
-  *  [**具体的某个控制器门内是否做了横屏适配**](#横屏适配)
-  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)。因为是强制性的横屏呈现，所以<font color=red>**优先级最高**</font>
+* 以上测评结论均来自iOS模拟器。其中`UIDevice.currentDevice.orientation`取值需要真机配合
 * 以上测评判定标准
   * 如果配置了`- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window`为横屏模式（默认为竖屏模式），但是终值为竖屏，**则为错误读取**
   * 如果不配置`- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window`为横屏模式（默认为竖屏模式），则以当前设备定位为准
-* 对于页面，因为需要自适应调整，那么以靠后的生命周期读取值为准。比如在**viewController**里面`-(void)viewDidAppear:(BOOL)animated`的值为最终系统在综合各种因素后调整后的值。<font color=red>**不要去关心中间值，以终值为准，这样方便定位我们从何时调用方法为有效调用**</font>
+* 对于页面，因为需要根据相关配置做自适应调整，那么以靠后的生命周期读取值为准
+  * 比如在**viewController**里面`-(void)viewDidAppear:(BOOL)animated`的值为最终系统在综合各种因素后调整后的值
+  * <font color=red>**不要去关心中间值，以终值为准，这样方便定位我们从何时调用方法为有效调用**</font>
 * **一般的架构是将`UITabBarController`及其子类作为根控制器，那么在呈现页面的时候，内部会去调整UI适配横竖屏。所以，`UITabBarController`及其子类以及挂载在上面的子控制器，均是需要在页面生命周期走完以后（即，`-(void)viewDidAppear:(BOOL)animated`以后）才能获取到正确的值**
 * [**如果锚定`UIDevice.currentDevice.orientation`**](#锚定`UIDevice.currentDevice.orientation`)
-  * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，均不能用
-  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，也只能在`-(void)viewDidAppear:(BOOL)animated`能用
+  * 不可用
 * [**如果锚定场景方向`UIInterfaceOrientation`**](#锚定场景方向`UIInterfaceOrientation`)
-  * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，均不能用
-  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，也只能在`-(void)viewDidAppear:(BOOL)animated`能用（除，当前控制器为普通的`UIViewController`及其子类，为错误，不可用）
+  * 只在普通`UIViewController *`可用
 * [**如果锚定`view.traitCollection.verticalSizeClass`**](#锚定`view.traitCollection.verticalSizeClass`)
-  * <font color=red>**不**</font> [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，均不能用
-  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，在非挂载到`UITabBarController`及其子类上的控制器上，均有效
-  * [**在`AppDelegate`里面适配**](#在`AppDelegate`里面适配)，在`-(void)viewDidAppear:(BOOL)animated`，均有效
+  * 只在普通`UIViewController *`可用
 
