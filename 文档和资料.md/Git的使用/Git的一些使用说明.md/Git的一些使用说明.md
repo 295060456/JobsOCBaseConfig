@@ -310,12 +310,17 @@ A---B---C---D  (main)
   	logallrefupdates = true
   	ignorecase = true
   	precomposeunicode = true
-  [remote "origin"]
-  	url = git@github.com:295060456/JobsOCBaseConfig.git
-  	fetch = +refs/heads/*:refs/remotes/origin/*
+  [remote "Jobs.Office"]
+  	url = https://git.betzz.cc/fm_ios/fm.ios.git
+  	fetch = +refs/heads/*:refs/remotes/Jobs.Office/*
+  [remote "Jobs.Github"]
+  	url = git@github.com:295060456/JobsOCBaseConfigDemo.git
+  	fetch = +refs/heads/*:refs/remotes/Jobs.Github/*
   [branch "main"]
-  	remote = origin
+  	remote = Jobs.Github
   	merge = refs/heads/main
+  [pull]
+  	rebase = false
   ```
 
   * `[core]` 部分包含了一些核心配置选项，这些选项影响 Git 的基本行为
