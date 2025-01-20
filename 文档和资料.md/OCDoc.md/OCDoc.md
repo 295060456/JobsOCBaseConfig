@@ -42,6 +42,8 @@
 
 ## <font color="red">***strong/copy***</font>
 
+* 只有对不可变对象进行copy操作是指针复制（浅复制），其它情况都是内容复制（深复制）！
+
 * 使用 `copy` 关键字可以防止对象值的意外修改
 
   ```objective-c
@@ -425,19 +427,41 @@ static char *BaseVC_BackBtn_backBtnCategoryItem = "BaseVC_BackBtn_backBtnCategor
 @end
 ```
 
+## ViewController的11个生命周期（按照执行顺序排列）
+
+* initWithCoder：通过nib文件初始化时触发。
+* awakeFromNib：nib文件被加载的时候，会发生一个awakeFromNib的消息到nib文件中的每个对象。
+* loadView：开始加载视图控制器自带的view。
+* viewDidLoad：视图控制器的view被加载完成。
+* viewWillAppear：视图控制器的view将要显示在window上。
+* updateViewConstraints：视图控制器的view开始更新AutoLayout约束。
+* viewWillLayoutSubviews：视图控制器的view将要更新内容视图的位置。
+* viewDidLayoutSubviews：视图控制器的view已经更新视图的位置。
+* viewDidAppear：视图控制器的view已经展示到window上。
+* viewWillDisappear：视图控制器的view将要从window上消失。
+* viewDidDisappear：视图控制器的view已经从window上消失。
+
 ## KVC 和 KVO
 
 ### KVC（<font color="red">***K***</font>ey-<font color="red">***V***</font>alue <font color="red">***C***</font>oding）：**键值**<font color="red">存储</font>
 
 * 通过key->对象属性。不需要通过`set/get`方法；
+* KVC 和 KVO 的 keyPath 可以是属性、实例变量、成员变量；
 * 对于支持 KVC 的对象，可以通过 `setValue:forKey:` 和 `valueForKey:` 等方法来设置和获取属性值；
 * KVC 在实现**数据绑定**、**序列化**和其他一些需要**动态地访问属性**的场景中非常有用；
+* KVC的底层实现：当一个对象调用setValue方法时，方法内部会做以下操作👇🏻
+  * 检查是否存在相应的key的set方法，如果存在，就调用set方法；
+  * 如果set方法不存在，就会查找与key相同名称并且带下划线的成员变量，如果有，则直接给成员变量属性赋值；
+  * 如果没有找到_key，就会查找相同名称的属性key，如果有就直接赋值；
+  * 如果还没有找到，则调用valueForUndefinedKey:和setValue:forUndefinedKey:方法；
+  * 这些方法的默认实现都是抛出异常，我们可以根据需要重写它们。
 * 也有一些特殊情况下的对象不支持 KVC。例如：
   * 未定义键的属性：如果[***一个属性没有对应的 `getter` 和 `setter` 方法***](# 可能会存在属性没有对应的 `getter` 和 `setter` 方法的情况)，或者不符合 KVC 的命名规范，那么该属性就不支持 KVC。
 
 ### KVO（<font color="red">***K***</font>ey-<font color="red">***V***</font>alue <font color="red">***O***</font>bserving）：**属性**<font color="red">观察</font>
 
 * KVO 是一种**观察者模式**的实现，它**允许一个对象（非类）监听另一个对象的属性的变化**；
+* KVO只能被KVC触发，包括使用`setValue:forKey:`方法和点语法；
 * 不是所有的类都支持KVO：
   * ***类必须直接或间接地继承自NSObject（即，类必须实例为对象）***：这是因为KVO是基于OC.runtime系统的，它利用了OC的动态特性来观察对象属性的变化；一个常见的反例是 Core Graphics（Quartz）框架中的许多类型，如 CGPoint、CGSize、CGRect 等。这些类型是 C 语言结构体，而不是 OC 对象，因此它们不继承自 NSObject，并且不支持 KVO。
   * ***被观察的属性必须是对象的属性，而非标量类型***（例如int、float等）；
@@ -623,7 +647,7 @@ print("整数 \(integer) 在内存中的表示为: \(MemoryLayout.size(ofValue: 
 * IPv6地址空间更大，为128位，这使得有更多的地址组合。
 * IPv6中的端口号仍然是16位，因此有2^16（65536）个可能的端口号。
 * 与IPv4不同的是，**IPv6不需要像IPv4一样分出专门的私有地址范围**，因为IPv6的地址空间足够大，**允许每个设备都有一个全局唯一的地址**。
-* 总的IPv6地址-端口对数目：2<sup>128</sup> x 2<sup>16</sup> = 2<sup>144 **这是IPv6网络中可能的唯一的地址-端口对的总数**
+* 总的IPv6地址-端口对数目：2<sup>128</sup> x 2<sup>16</sup> = 2<sup>144</sup>  **这是IPv6网络中可能的唯一的地址-端口对的总数**
 **与IPv4相比，IPv6具有更大的地址空间和端口数目，而且IPv6中没有像IPv4那样需要特别保留的地址范围，因此它实际上提供了更多的灵活性。**
 ## 一个IP能有多少个端口
 * 每个IPv4地址有**65535**个端口，而每个IPv6地址有2^16次方（约**65,536**）个端口；
