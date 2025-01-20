@@ -6,6 +6,83 @@
 
 ![IMAGE 2024-09-09 23:23:12](./assets/IMAGE 2024-09-09 23:23:12.jpg)
 
+## <font color="red">***内存分布***</font>
+
+```
+ 低地址
+ +------------------+
+ | 代码段 (Text)    |
+ +------------------+
+ | 数据段 (Data)    |
+ +------------------+
+ | BSS 段           |
+ +------------------+
+ | 堆 (Heap)        |  <-- 向高地址增长
+ +------------------+
+ | 栈 (Stack)       |  <-- 向低地址增长
+ +------------------+
+ 高地址
+```
+
+## <font color="red">***atomic/nonatomic***</font>
+
+* 在 iOS 和 Objective-C 中，原子属性（atomic property） 是 @property 的一种属性修饰符，它决定了属性的线程安全性。如果声明为 atomic，编译器会为这个属性的 getter 和 setter 方法生成某种程度的线程安全代码，确保在多线程访问时，属性的值总是返回一个完整的对象。
+* 原子属性的特点：
+  *  默认行为：如果你不显式声明 nonatomic，@property 默认是 atomic。
+  *  线程安全：对于 atomic 的属性，编译器在生成的 getter 和 setter 方法中会使用锁（类似自旋锁或其他锁机制）来确保值的完整性。例如，在 getter 方法中，即使有其他线程正在修改属性值，也不会返回一个“半成品”对象。
+  *  影响性能：因为 atomic 属性需要加锁和解锁操作，所以性能比 nonatomic 稍差。尤其是在频繁访问属性时，可能会成为性能瓶颈。
+  * 保证的是“值完整性”，而不是“业务逻辑完整性”：atomic 只保证 getter 和 setter 的操作是线程安全的，但不保证多线程间的操作逻辑是安全的。例如，多个线程同时修改属性值时，仍可能产生竞争条件。
+* 为什么实际开发中常用 nonatomic？
+  * 性能需求：在大多数应用场景下，性能优先于线程安全，尤其是在频繁访问的属性上。相比之下，nonatomic 不会进行加锁操作，性能更高。
+  * 线程安全通常由其他机制保证：应用通常通过更高级的同步机制（如 GCD、锁）来保证线程安全，而不是依赖于属性的 atomic。
+  * atomic 不完全保证线程安全： 即使使用 atomic，多线程操作仍然可能引发逻辑问题，例如读写操作之间的竞态条件。所以需要额外的同步控制。
+* 总结
+  * atomic 属性是线程安全的，但在实际开发中很少使用，因为其性能开销较高，而且它并不能解决所有线程安全问题。
+  * 开发中推荐使用 nonatomic，同时通过其他手段（如 GCD 或 NSLock）来实现真正的线程安全。 
+
+## <font color="red">***strong/copy***</font>
+
+* 使用 `copy` 关键字可以防止对象值的意外修改
+
+  ```objective-c
+  #import <Foundation/Foundation.h>
+  
+  @interface MyClass : NSObject
+    
+  @property (nonatomic,strong)NSString *strongString;
+  @property (nonatomic,copy)NSString *copyString;
+  
+  @end
+  
+  @implementation MyClass
+  @end
+  
+  int main(int argc, const char * argv[]) {
+      @autoreleasepool {
+          NSMutableString *mutableStr = [NSMutableString stringWithString:@"初始值"];
+        
+          MyClass *obj = [[MyClass alloc] init];
+          obj.strongString = mutableStr; // 使用 strong 属性赋值
+          obj.copyString = mutableStr;   // 使用 copy 属性赋值
+          
+          NSLog(@"修改前 - strongString: %@, copyString: %@", obj.strongString, obj.copyString);
+          
+          // 修改原来的 mutableStr 的值
+          [mutableStr appendString:@" - 修改后"];
+          
+          NSLog(@"修改后 - strongString: %@, copyString: %@", obj.strongString, obj.copyString);
+      }return 0;
+  }
+  ```
+
+  ```
+  修改前 - strongString: 初始值, copyString: 初始值
+  修改后 - strongString: 初始值 - 修改后, copyString: 初始值
+  
+  如果用 strong，会有可能意外地共享同一个可变对象，导致外部修改影响到内部数据。
+  使用 copy 则确保即使传入的是一个可变对象，属性也只会保留一个不可变的副本，从而避免了这种不确定性。
+  ```
+
 ## <font color="red">***OC/C.Block***</font>
 
 * ***Block* 的捕获变量：** 当一个 *Block* 被创建时，它会捕获在其内部使用的外部变量。  
@@ -58,7 +135,7 @@
   * **内存管理问题**：`__block`变量会在**block**中被捕获，并且在不同的上下文中可能会被不同的内存管理规则处理（特别是在ARC模式下）。这与属性的内存管理（`strong`、`weak`等）会产生冲突。
   * **访问方法**：属性在**Objective-C**中通过`getter`和`setter`方法访问。使用`__block`修饰符会绕过这些访问方法，直接操作实例变量，破坏了属性的封装性和一致性。
 
-* <font color=red>block属性化可以用**assign**修饰，但是最好用**copy**</font>
+* <font color=red>Block属性化可以用**assign**修饰，但是最好用**copy**</font>
 
   * 举例：`MJRefreshConfigModel` 是通过分类挂载的，`loadBlock`是它的一个属性。当在其他地方取值的时候，如果是**assign**修饰，会崩溃
 
@@ -66,7 +143,7 @@
     @property(nonatomic,copy)JobsReturnIDByIDBlock loadBlock;
     ```
 
-  * 原因：
+  * 原因：<u>可能这个Block是栈Block</u>
 
     * **内存管理：** 使用 `copy` 修饰符可以确保在设置 block 属性时，会将 block 复制到堆上，而不是简单地引用。这样可以避免在 block 在栈上分配时出现内存管理问题。
     * **生命周期管理：** 通过使用 `copy` 修饰符，可以保证 block 在被设置到属性时会被正确地复制，并且 block 的生命周期会由属性拥有。这有助于避免在 block 离开作用域后访问悬垂指针的问题。
@@ -155,73 +232,20 @@
 
 ## 锁
 
-```objective-c
-#import <Foundation/Foundation.h>
+* 互斥锁（Mutex, Mutual Exclusion Lock）：
+  * 互斥锁是一种基本的锁，用于确保一次只有一个线程可以访问某资源。
+  * 如果一个线程获得了锁，其他线程必须等待锁被释放。
 
-@interface CustomLock : NSObject
+* 读写锁（Read-Write Lock）：
+  * 读写锁允许多个线程同时读取，但写操作是排他的，即在写操作进行时，其他读线程或写线程都要等待。
 
-- (void)lock;
-- (void)unlock;
+* 递归锁（Recursive Lock）： 
+  * 允许同一线程多次加锁，而不会导致死锁。
+  * 递归锁对某些场景很有用，比如在递归函数中使用锁。
 
-@end
-
-@implementation CustomLock {
-    dispatch_semaphore_t _semaphore;
-}
-
-- (instancetype)init {
-    self = [super init];
-    if (self) {
-        _semaphore = dispatch_semaphore_create(1);
-    }
-    return self;
-}
-
-- (void)lock {
-    dispatch_semaphore_wait(_semaphore, DISPATCH_TIME_FOREVER);
-}
-
-- (void)unlock {
-    dispatch_semaphore_signal(_semaphore);
-}
-
-@end
-
-int main(int argc, const char * argv[]) {
-    @autoreleasepool {
-        CustomLock *lock = [[CustomLock alloc] init];
-        
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [lock lock];
-            NSLog(@"Thread 1: Lock acquired");
-            sleep(2); // Simulate some work
-            [lock unlock];
-            NSLog(@"Thread 1: Lock released");
-        });
-        
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            [lock lock];
-            NSLog(@"Thread 2: Lock acquired");
-            sleep(2); // Simulate some work
-            [lock unlock];
-            NSLog(@"Thread 2: Lock released");
-        });
-        
-        [[NSRunLoop currentRunLoop] run]; // Keep the main thread alive
-    }
-    return 0;
-}
-/**
-
-这个示例定义了一个名为 CustomLock 的类，它实现了 lock 和 unlock 方法。
-
-在 lock 方法中，我们使用 dispatch_semaphore_wait 函数来等待信号量
-当信号量的值为大于等于 1 时，说明锁是可用的，我们就将信号量的值减 1，并且获取锁。
-在 unlock 方法中，我们使用 dispatch_semaphore_signal 函数来释放锁，将信号量的值加 1。
-
-在 main 函数中，我们创建了一个 CustomLock 对象，并在两个后台线程中分别调用 lock 和 unlock 方法来模拟锁的获取和释放。为了保持主线程的运行，我们使用了 [[NSRunLoop currentRunLoop] run] 来让主线程保持活跃状态。
-*/
-```
+* 自旋锁（Spin Lock）：
+  * 自旋锁是轻量级锁，如果锁被占用，线程不会立即挂起，而是会不断尝试获取锁。
+  * 自旋锁适合加锁时间非常短的场景，因为线程在等待时不会切换上下文，效率更高。
 
 ## OC里面有没有类似于Java里面的`linkedhashset`的东西
 
