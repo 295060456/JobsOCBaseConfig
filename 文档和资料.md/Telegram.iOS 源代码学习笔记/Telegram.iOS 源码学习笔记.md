@@ -403,6 +403,8 @@
     ```
   
   ![image-20250127135029364](./assets/image-20250127135029364.png)
+  
+  ![image-20250127135316387](./assets/image-20250127135316387.png)
 ## 2、相关组件
 
 * **T**elegram **D**atabase **Lib**rary (简称 [**TDLib**](https://github.com/tdlib/td))：
